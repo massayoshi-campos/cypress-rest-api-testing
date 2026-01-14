@@ -34,7 +34,7 @@ jobs:
       - name: Run Cypress API tests
         working-directory: api
         run: |
-          npx cypress run --env configFile=qa
+          npm run test-qa -- --spec "cypress/e2e/pet/createPet.cy.js"
 
       # -------- REPORTS --------
 
