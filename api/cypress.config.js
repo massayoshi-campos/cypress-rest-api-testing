@@ -50,7 +50,9 @@ module.exports = defineConfig({
       return require("./cypress/plugins/index.js")(on, config);
     },
     env: {
-      snapshotOnly: true
+      snapshotOnly: true,
+      PASSPHRASE: process.env.PASSPHRASE,
+      API_KEY: process.env.API_KEY
     }
   },
 
