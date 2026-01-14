@@ -2,9 +2,9 @@ name: Cypress API Tests
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   cypress-run:
@@ -23,7 +23,53 @@ jobs:
         working-directory: api
         run: npm install
 
+      - name: Show Brazil date and time
+        run: |
+          echo "Current Date and Time (Brazil): $(TZ=America/Sao_Paulo date '+%d/%m/%Y %H:%M:%S')"
+
+        # ------------------------------------------------------------------------------
+        # System Test Jobs - QA (Petstore API)
+        # ------------------------------------------------------------------------------
+
       - name: Run Cypress API tests
         working-directory: api
         run: |
           npx cypress run --env configFile=qa
+
+      # -------- REPORTS --------
+
+      - name: Merge Mochawesome JSON reports
+        working-directory: api
+        run: npm run cypress:merge-reports-json
+
+      - name: Generate Mochawesome HTML
+        working-directory: api
+        run: npm run cypress:generate-report-html
+
+      - name: Merge Mochawesome HTML
+        working-directory: api
+        run: npm run cypress:merge-report-html
+
+      - name: List report files
+        working-directory: api
+        run: ls -al mochawesome-report/
+
+      # -------- UPLOAD ARTIFACTS --------
+
+      - name: Upload Mochawesome HTML report
+        uses: actions/upload-artifact@v4
+        with:
+          name: mochawesome-report
+          path: api/mochawesome-report/
+
+      - name: Upload Cypress screenshots
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress-screenshots
+          path: api/cypress/reports/screenshots/
+
+      - name: Upload JUnit XML
+        uses: actions/upload-artifact@v4
+        with:
+          name: junit-report
+          path: api/mochawesome-report/junit-report-*.xml
