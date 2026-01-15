@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 jobs:
-  cypress-run:
+  test-api-qa-petstore-pet:
     runs-on: ubuntu-latest
 
     steps:
