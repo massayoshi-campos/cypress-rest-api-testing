@@ -22,6 +22,7 @@ const path = require("path");
 const crypto = require("crypto");
 const pdfParse = require("pdf-parse");
 const { PDFDocument } = require("pdf-lib");
+const localStoragePlugin = require("cypress-localstorage-commands/plugin");
 let pdfjsLib = null;
 
 // Loads a JSON configuration file based on the selected environment.
@@ -46,7 +47,21 @@ function decrypt(encryptedText, passphrase) {
 }
 
 module.exports = (on, config) => {
+  config.expose = config.expose || {};
+  localStoragePlugin(on, config);
+
   on("task", {
+    // Decrypts AES-256-GCM data using Node.js crypto.
+    decryptText({ encryptedText, passphrase }) {
+      if (!encryptedText || !passphrase) {
+        throw new Error(
+          "Encrypted text and passphrase are required for decryption.",
+        );
+      }
+
+      return decrypt(encryptedText, passphrase);
+    },
+
     parsePdf(filePath) {
       const fileBuffer = fs.readFileSync(filePath);
       return pdfParse(fileBuffer).then((data) => data.text);

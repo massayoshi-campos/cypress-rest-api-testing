@@ -12,6 +12,7 @@ function getTimestamp() {
 }
 
 module.exports = defineConfig({
+  allowCypressEnv: false,
   chromeWebSecurity: false,
   defaultCommandTimeout: 30000,
   execTimeout: 60000,

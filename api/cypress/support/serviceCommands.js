@@ -1,6 +1,3 @@
-const passphrase = Cypress.env("PASSPHRASE");
-const encryptedApiKey = Cypress.env("API_KEY");
-
 let apiKeyToken;
 
 // Sends an HTTP request with the API key automatically added in the headers.
@@ -38,15 +35,27 @@ Cypress.Commands.add("headersWithBodyApiKey", (method, url, body) => {
 
 // Decrypts and stores the API key once to reuse it in all requests.
 // Avoids decrypting the token multiple times during the test run.
+
 Cypress.Commands.add("setupApiKeyToken", () => {
-  if (!apiKeyToken) {
-    return cy.decryptText(encryptedApiKey, passphrase).then((token) => {
+  if (apiKeyToken) {
+    return cy.wrap(apiKeyToken, { log: false });
+  }
+
+  return cy
+    .env(["API_KEY", "PASSPHRASE"], { log: false })
+    .then(({ API_KEY, PASSPHRASE }) => {
+      if (!API_KEY || !PASSPHRASE) {
+        throw new Error(
+          "API_KEY and PASSPHRASE must be configured for this environment.",
+        );
+      }
+
+      return cy.decryptText(API_KEY, PASSPHRASE);
+    })
+    .then((token) => {
       apiKeyToken = token;
       return cy.wrap(apiKeyToken, { log: false });
     });
-  }
-
-  return cy.wrap(apiKeyToken, { log: false });
 });
 
 // Wrapper to send an API request using the API key headers.
@@ -128,7 +137,7 @@ Cypress.Commands.add(
 
       return { response, responseTime };
     });
-  }
+  },
 );
 
 // Sends a request with an invalid API key and a JSON body.
@@ -146,7 +155,7 @@ Cypress.Commands.add(
       body,
       failOnStatusCode: false,
     });
-  }
+  },
 );
 
 // Sends a request with a JSON body but without an API key.
@@ -164,7 +173,7 @@ Cypress.Commands.add(
       body,
       failOnStatusCode: false,
     });
-  }
+  },
 );
 
 // Sends a secured request with a JSON body to an incorrect or invalid URL.
