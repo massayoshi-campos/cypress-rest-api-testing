@@ -8,7 +8,7 @@ describe("Petstore API - Pet CRUD Flow (Create, Read, Update, Find, Delete) - Po
           () => cy.serviceToPet.createPet(requestData),
           200,
           "OK",
-          true
+          true,
         ).then((res) => {
           const responseBody = res.body;
 
@@ -22,13 +22,35 @@ describe("Petstore API - Pet CRUD Flow (Create, Read, Update, Find, Delete) - Po
           });
 
           expect(responseBody.photoUrls[0]).to.eq(
-            "https://images.pets.com/golden-retriever-101.jpg"
+            "https://images.pets.com/golden-retriever-101.jpg",
           );
 
           expect(responseBody.tags[0]).to.deep.equal({
             id: 5,
             name: "vaccinated",
           });
+
+          expect(responseBody.category.id).to.be.a("number");
+          expect(responseBody.category.name).to.be.a("string");
+
+          expect(responseBody.photoUrls).to.be.an("array");
+          responseBody.photoUrls.forEach((photoUrl) => {
+            expect(photoUrl).to.be.a("string");
+          });
+
+          expect(responseBody.tags).to.be.an("array");
+          responseBody.tags.forEach((tag) => {
+            expect(tag).to.be.an("object");
+            expect(tag.id).to.be.a("number");
+            expect(tag.name).to.be.a("string");
+          });
+
+          expect(responseBody.status).to.be.a("string");
+          expect(responseBody.status).to.be.oneOf([
+            "available",
+            "pending",
+            "sold",
+          ]);
         });
       });
     });
@@ -38,10 +60,11 @@ describe("Petstore API - Pet CRUD Flow (Create, Read, Update, Find, Delete) - Po
         () => cy.serviceToPet.getPetById(337),
         200,
         "OK",
-        true
+        true,
       ).then((res) => {
         const responseBody = res.body;
 
+        // Validate pet data
         expect(responseBody).to.have.property("id", 337);
         expect(responseBody).to.have.property("name", "Golden Retriever");
         expect(responseBody.status).to.eq("available");
@@ -52,12 +75,33 @@ describe("Petstore API - Pet CRUD Flow (Create, Read, Update, Find, Delete) - Po
         });
 
         expect(responseBody.photoUrls[0]).to.eq(
-          "https://images.pets.com/golden-retriever-101.jpg"
+          "https://images.pets.com/golden-retriever-101.jpg",
         );
 
         expect(responseBody.tags[0]).to.deep.equal({
           id: 5,
           name: "vaccinated",
+        });
+
+        // Validate data types
+        expect(responseBody.id).to.be.a("number");
+        expect(responseBody.name).to.be.a("string");
+        expect(responseBody.status).to.be.a("string");
+
+        expect(responseBody.category).to.be.an("object");
+        expect(responseBody.category.id).to.be.a("number");
+        expect(responseBody.category.name).to.be.a("string");
+
+        expect(responseBody.photoUrls).to.be.an("array");
+        responseBody.photoUrls.forEach((photoUrl) => {
+          expect(photoUrl).to.be.a("string");
+        });
+
+        expect(responseBody.tags).to.be.an("array");
+        responseBody.tags.forEach((tag) => {
+          expect(tag).to.be.an("object");
+          expect(tag.id).to.be.a("number");
+          expect(tag.name).to.be.a("string");
         });
       });
     });
@@ -68,7 +112,7 @@ describe("Petstore API - Pet CRUD Flow (Create, Read, Update, Find, Delete) - Po
           () => cy.serviceToPet.updatePet(requestData),
           200,
           "OK",
-          true
+          true,
         ).then((res) => {
           const responseBody = res.body;
 
@@ -82,13 +126,41 @@ describe("Petstore API - Pet CRUD Flow (Create, Read, Update, Find, Delete) - Po
           });
 
           expect(responseBody.photoUrls[0]).to.eq(
-            "https://images.pets.com/persa-104.jpg"
+            "https://images.pets.com/persa-104.jpg",
           );
 
           expect(responseBody.tags[0]).to.deep.equal({
             id: 6,
             name: "vaccinated",
           });
+
+          // Validate data types
+          expect(responseBody.id).to.be.a("number");
+
+          expect(responseBody.name).to.be.a("string").and.not.be.empty;
+
+          expect(responseBody.category).to.be.an("object");
+          expect(responseBody.category.id).to.be.a("number");
+          expect(responseBody.category.name).to.be.a("string");
+
+          expect(responseBody.photoUrls).to.be.an("array");
+          responseBody.photoUrls.forEach((photoUrl) => {
+            expect(photoUrl).to.be.a("string");
+          });
+
+          expect(responseBody.tags).to.be.an("array");
+          responseBody.tags.forEach((tag) => {
+            expect(tag).to.be.an("object");
+            expect(tag.id).to.be.a("number");
+            expect(tag.name).to.be.a("string");
+          });
+
+          expect(responseBody.status).to.be.a("string");
+          expect(responseBody.status).to.be.oneOf([
+            "available",
+            "pending",
+            "sold",
+          ]);
         });
       });
     });
@@ -98,7 +170,7 @@ describe("Petstore API - Pet CRUD Flow (Create, Read, Update, Find, Delete) - Po
         () => cy.serviceToPet.getPetsByStatus("pending"),
         200,
         "OK",
-        true
+        true,
       ).then((res) => {
         const responseBody = res.body;
         expect(responseBody).to.be.an("array");
@@ -125,7 +197,7 @@ describe("Petstore API - Pet CRUD Flow (Create, Read, Update, Find, Delete) - Po
         () => cy.serviceToPet.deletePetById(337),
         200,
         "OK",
-        true
+        true,
       ).then((res) => {
         const responseBody = res.body;
         expect(responseBody).to.have.property("code", 200);
@@ -158,19 +230,41 @@ describe("Petstore API - Pet CRUD Flow (Create, Read, Update, Find, Delete) - Po
           "name",
           "photoUrls",
           "tags",
-          "status"
+          "status",
         );
       });
     });
 
     it("PUT - should allow updating the pet multiple times", () => {
       cy.fixture("pet/test_c.json").then((update1) => {
-        cy.serviceToPet.updatePet(update1);
-      });
+        cy.serviceToPet.updatePet(update1).then((res) => {
+          expect(res.status).to.eq(200);
+          expect(res.body).to.be.an("object");
 
-      cy.fixture("pet/test_b.json").then((update2) => {
-        cy.serviceToPet.updatePet(update2).then((res) => {
-          expect(res.body.name).to.eq("Golden Retriever");
+          expect(res.body.id).to.eq(update1.id);
+          expect(res.body.name).to.eq("Persa");
+          expect(res.body.status).to.eq("pending");
+
+          expect(res.body.category).to.deep.equal({
+            id: 13,
+            name: "Cats",
+          });
+
+          cy.fixture("pet/test_b.json").then((update2) => {
+            cy.serviceToPet.updatePet(update2).then((res) => {
+              expect(res.status).to.eq(200);
+              expect(res.body).to.be.an("object");
+
+              expect(res.body.id).to.eq(update2.id);
+              expect(res.body.name).to.eq("Golden Retriever");
+              expect(res.body.status).to.eq("available");
+
+              expect(res.body.category).to.deep.equal({
+                id: 12,
+                name: "Dogs",
+              });
+            });
+          });
         });
       });
     });
@@ -199,15 +293,127 @@ describe("Petstore API - Authentication and Validation - Negative Test Scenarios
       });
     });
 
+    it("POST - should handle an empty JSON body", () => {
+      const emptyBody = {};
+
+      cy.apiKeyRequestWithJsonBody("POST", "pet", emptyBody).then((res) => {
+        expect(res.status).to.eq(200);
+        expect(res.body).to.be.an("object");
+        expect(res.body).to.have.property("id");
+        expect(res.body.id).to.be.a("number");
+        expect(res.body.photoUrls).to.deep.equal([]);
+        expect(res.body.tags).to.deep.equal([]);
+      });
+    });
+
+    it("POST - should handle a partial JSON body", () => {
+      const partialBody = {
+        name: "Pet without remaining fields",
+      };
+
+      cy.apiKeyRequestWithJsonBody("POST", "pet", partialBody).then((res) => {
+        expect(res.status).to.eq(200);
+        expect(res.body).to.be.an("object");
+
+        expect(res.body).to.have.property("id");
+        expect(res.body.id).to.be.a("number");
+
+        expect(res.body.name).to.eq(partialBody.name);
+        expect(res.body.photoUrls).to.deep.equal([]);
+        expect(res.body.tags).to.deep.equal([]);
+
+        expect(res.body).not.to.have.property("category");
+        expect(res.body).not.to.have.property("status");
+      });
+    });
+
     it("GET - should return 404 for wrong endpoint", () => {
       cy.serviceToPet.callWrongEndpoint().then((res) => {
         expect(res.status).to.eq(404);
       });
     });
 
+    it("GET - should return an error for an invalid pet ID", () => {
+      const invalidPetId = "abc";
+
+      cy.serviceToPet.getPetById(invalidPetId).then((res) => {
+        expect(res.status).to.be.oneOf([400, 404]);
+      });
+    });
+
+    it("GET - should return 404 for pet ID zero", () => {
+      cy.serviceToPet.getPetById(0).then((res) => {
+        expect(res.status).to.eq(404);
+        expect(res.body).to.have.property("message", "Pet not found");
+      });
+    });
+
     it("PATCH - should reject unsupported HTTP method", () => {
       cy.serviceToPet.callInvalidMethod().then((res) => {
         expect(res.status).to.be.oneOf([400, 405]);
+      });
+    });
+
+    it("GET - should return 404 for a non-existent pet ID", () => {
+      const nonExistentPetId = 999999999999;
+
+      cy.serviceToPet.getPetById(nonExistentPetId).then((res) => {
+        expect(res.status).to.eq(404);
+        expect(res.body).to.have.property("message", "Pet not found");
+      });
+    });
+
+    it("PUT - should handle an empty JSON body", () => {
+      const emptyBody = {};
+
+      cy.serviceToPet.updatePet(emptyBody).then((res) => {
+        expect(res.status).to.eq(200);
+        expect(res.body).to.be.an("object");
+
+        expect(res.body).to.have.property("id");
+        expect(res.body.id).to.be.a("number");
+
+        expect(res.body.photoUrls).to.deep.equal([]);
+        expect(res.body.tags).to.deep.equal([]);
+      });
+    });
+
+    it("PUT - should handle a partial JSON body", () => {
+      const partialBody = {
+        name: "Pet updated with partial body",
+      };
+
+      cy.serviceToPet.updatePet(partialBody).then((res) => {
+        expect(res.status).to.eq(200);
+        expect(res.body).to.be.an("object");
+
+        expect(res.body).to.have.property("id");
+        expect(res.body.id).to.be.a("number");
+
+        expect(res.body.name).to.eq(partialBody.name);
+        expect(res.body.photoUrls).to.deep.equal([]);
+        expect(res.body.tags).to.deep.equal([]);
+
+        expect(res.body).not.to.have.property("category");
+        expect(res.body).not.to.have.property("status");
+      });
+    });
+
+    it("PUT - should handle invalid data types", () => {
+      const invalidBody = {
+        id: "ABC",
+        name: true,
+        status: 999,
+      };
+
+      cy.serviceToPet.updatePet(invalidBody).then((res) => {
+        expect(res.status).to.eq(500);
+
+        expect(res.body).to.deep.equal({
+          code: 500,
+          type: "unknown",
+          message: "something bad happened",
+        });
       });
     });
   });
