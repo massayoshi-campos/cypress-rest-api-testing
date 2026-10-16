@@ -189,6 +189,53 @@ describe("Petstore API - Pet CRUD Flow (Create, Read, Update, Find, Delete) - Po
           id: 6,
           name: "vaccinated",
         });
+
+        responseBody.forEach((pet) => {
+          expect(pet.status).to.eq("pending");
+          expect(pet.id).to.be.a("number");
+          expect(pet.name).to.be.a("string");
+          expect(pet.photoUrls).to.be.an("array");
+          expect(pet.tags).to.be.an("array");
+        });
+      });
+    });
+
+    it("GET - should find and delete pet by available status", () => {
+      cy.fixture("pet/test_a.json").then((petData) => {
+        // POST - Create pet
+        cy.serviceToPet.createPet(petData).then((createRes) => {
+          expect(createRes.status).to.eq(200);
+          expect(createRes.body.id).to.eq(petData.id);
+          expect(createRes.body.status).to.eq("available");
+
+          // GET - Find pet by status
+          cy.serviceToPet.getPetsByStatus("available").then((res) => {
+            expect(res.status).to.eq(200);
+            expect(res.body).to.be.an("array");
+
+            const pet = res.body.find((p) => p.id === petData.id);
+
+            expect(pet, "Created pet should be found by status").to.not.be
+              .undefined;
+            expect(pet.id).to.eq(petData.id);
+            expect(pet.name).to.eq(petData.name);
+            expect(pet.status).to.eq("available");
+            expect(pet.category).to.deep.equal(petData.category);
+            expect(pet.photoUrls).to.deep.equal(petData.photoUrls);
+            expect(pet.tags).to.deep.equal(petData.tags);
+          });
+
+          // DELETE - Delete pet
+          cy.serviceToPet.deletePetById(petData.id).then((deleteRes) => {
+            expect(deleteRes.status).to.eq(200);
+
+            // GET - Verify pet was deleted
+            cy.serviceToPet.getPetById(petData.id).then((getRes) => {
+              expect(getRes.status).to.eq(404);
+              expect(getRes.body.message).to.eq("Pet not found");
+            });
+          });
+        });
       });
     });
 
