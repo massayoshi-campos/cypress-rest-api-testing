@@ -502,5 +502,12 @@ describe("Petstore API - Authentication and Validation - Negative Test Scenarios
         });
       });
     });
+
+    it("GET - should return an empty array for an invalid pet status", () => {
+      cy.serviceToPet.getPetsByStatus("unknown").then((res) => {
+        expect(res.status).to.eq(200);
+        expect(res.body).to.be.an("array").that.is.empty;
+      });
+    });
   });
 });
