@@ -518,5 +518,39 @@ describe("Petstore API - Authentication and Validation - Negative Test Scenarios
         expect(res.body).to.be.empty;
       });
     });
+
+    it("PUT - should handle updating a non-existent pet ID", () => {
+      cy.fixture("pet/test_b.json").then((petData) => {
+        const nonExistentPet = {
+          ...petData,
+          id: 999999999998,
+          name: "Pet Updated With Non-existent ID",
+        };
+
+        cy.serviceToPet.updatePet(nonExistentPet).then((res) => {
+          expect(res.status).to.eq(200);
+          expect(res.body.id).to.eq(nonExistentPet.id);
+          expect(res.body.name).to.eq(nonExistentPet.name);
+        });
+
+        // GET - Verify the pet created by PUT
+        cy.serviceToPet.getPetById(nonExistentPet.id).then((getRes) => {
+          expect(getRes.status).to.eq(200);
+          expect(getRes.body.id).to.eq(nonExistentPet.id);
+          expect(getRes.body.name).to.eq(nonExistentPet.name);
+        });
+
+        // DELETE - Clean up the test data
+        cy.serviceToPet.deletePetById(nonExistentPet.id).then((deleteRes) => {
+          expect(deleteRes.status).to.eq(200);
+
+          // GET - Verify the pet was deleted
+          cy.serviceToPet.getPetById(nonExistentPet.id).then((verifyRes) => {
+            expect(verifyRes.status).to.eq(404);
+            expect(verifyRes.body.message).to.eq("Pet not found");
+          });
+        });
+      });
+    });
   });
 });
