@@ -509,5 +509,14 @@ describe("Petstore API - Authentication and Validation - Negative Test Scenarios
         expect(res.body).to.be.an("array").that.is.empty;
       });
     });
+
+    it("DELETE - should handle a non-existent pet ID", () => {
+      const nonExistentPetId = 999999999999;
+
+      cy.serviceToPet.deletePetById(nonExistentPetId).then((res) => {
+        expect(res.status).to.eq(404);
+        expect(res.body).to.be.empty;
+      });
+    });
   });
 });
