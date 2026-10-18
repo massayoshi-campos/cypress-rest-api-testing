@@ -26,4 +26,8 @@ cy.serviceToPet = {
   callInvalidMethod: () => {
     return cy.apiKeyRequest("PATCH", "pet");
   },
+
+  uploadPetImage: (petId, filePath, additionalMetadata = "") => {
+    return cy.apiKeyUploadPetImage(petId, filePath, additionalMetadata);
+  },
 };

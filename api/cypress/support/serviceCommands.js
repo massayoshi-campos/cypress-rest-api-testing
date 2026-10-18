@@ -297,3 +297,22 @@ Cypress.Commands.add("apiKeyBinaryRequest", (method, url) => {
     });
   });
 });
+
+Cypress.Commands.add(
+  "apiKeyUploadPetImage",
+  (petId, filePath, additionalMetadata = "") => {
+    return cy.setupApiKeyToken().then((apiKeyToken) => {
+      const absoluteFilePath = `cypress/fixtures/${filePath}`;
+
+      return cy.task("uploadPetImage", {
+        petId,
+        filePath: absoluteFilePath,
+        additionalMetadata,
+        baseUrl: Cypress.config("baseUrl"),
+        apiKeyToken,
+      });
+    });
+  },
+);
+
+

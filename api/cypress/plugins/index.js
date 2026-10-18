@@ -23,6 +23,8 @@ const crypto = require("crypto");
 const pdfParse = require("pdf-parse");
 const { PDFDocument } = require("pdf-lib");
 const localStoragePlugin = require("cypress-localstorage-commands/plugin");
+const FormData = require("form-data");
+const https = require("https");
 let pdfjsLib = null;
 
 // Loads a JSON configuration file based on the selected environment.
@@ -97,6 +99,72 @@ module.exports = (on, config) => {
         width: +(width * 0.352778).toFixed(2),
         height: +(height * 0.352778).toFixed(2),
       };
+    },
+
+    async uploadPetImage({
+      petId,
+      filePath,
+      additionalMetadata,
+      baseUrl,
+      apiKeyToken,
+    }) {
+      const form = new FormData();
+
+      form.append("file", fs.createReadStream(path.resolve(filePath)), {
+        filename: path.basename(filePath),
+        contentType: "image/png",
+      });
+
+      if (additionalMetadata) {
+        form.append("additionalMetadata", additionalMetadata);
+      }
+
+      const url = new URL(
+        `pet/${petId}/uploadImage`,
+        `${baseUrl.replace(/\/+$/, "")}/`,
+      );
+
+      return new Promise((resolve, reject) => {
+        const request = https.request(
+          url,
+          {
+            method: "POST",
+            headers: {
+              ...form.getHeaders(),
+              accept: "application/json",
+              api_key: apiKeyToken,
+            },
+          },
+          (response) => {
+            let responseBody = "";
+
+            response.setEncoding("utf8");
+
+            response.on("data", (chunk) => {
+              responseBody += chunk;
+            });
+
+            response.on("end", () => {
+              let body = responseBody;
+
+              try {
+                body = JSON.parse(responseBody);
+              } catch {
+                // Mantém o texto original se a resposta não for JSON.
+              }
+
+              resolve({
+                status: response.statusCode,
+                headers: response.headers,
+                body,
+              });
+            });
+          },
+        );
+
+        request.on("error", reject);
+        form.pipe(request);
+      });
     },
 
     // Reads a PDF file and retrieves the names of all embedded attachments.

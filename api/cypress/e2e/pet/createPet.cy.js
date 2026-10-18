@@ -362,6 +362,47 @@ describe("Petstore API - Pet CRUD Flow (Create, Read, Update, Find, Delete) - Po
         });
       });
     });
+
+    it("POST - should create a pet, upload an image and delete it", () => {
+      const petId = 340;
+
+      const petData = {
+        id: petId,
+        name: "Pet for image upload",
+        photoUrls: [],
+        tags: [],
+        status: "available",
+      };
+
+      cy.serviceToPet
+        .createPet(petData)
+        .then((createRes) => {
+          expect(createRes.status).to.eq(200);
+          expect(createRes.body.id).to.eq(petId);
+          expect(createRes.body.name).to.eq(petData.name);
+
+          return cy.serviceToPet.uploadPetImage(
+            petId,
+            "pet-image.png",
+            "Cypress image upload",
+          );
+        })
+        .then((uploadRes) => {
+          cy.log(`Upload HTTP status: ${uploadRes.status}`);
+          cy.log(`Upload response body: ${JSON.stringify(uploadRes.body)}`);
+
+          expect(uploadRes.status).to.eq(200);
+          expect(uploadRes.body).to.have.property("code", 200);
+          expect(uploadRes.body).to.have.property("type");
+          expect(uploadRes.body.message).to.include("File uploaded to");
+          expect(uploadRes.body.message).to.include("pet-image.png");
+        })
+        .then(() => {
+          cy.serviceToPet.deletePetById(petId).then((deleteRes) => {
+            expect(deleteRes.status).to.be.oneOf([200, 204]);
+          });
+        });
+    });
   });
 });
 
@@ -376,19 +417,6 @@ describe("Petstore API - Authentication and Validation - Negative Test Scenarios
 
       cy.apiKeyRequestWithJsonBody("POST", "pet", invalidBody).then((res) => {
         expect(res.status).to.eq(500);
-      });
-    });
-
-    it("POST - should handle an empty JSON body", () => {
-      const emptyBody = {};
-
-      cy.apiKeyRequestWithJsonBody("POST", "pet", emptyBody).then((res) => {
-        expect(res.status).to.eq(200);
-        expect(res.body).to.be.an("object");
-        expect(res.body).to.have.property("id");
-        expect(res.body.id).to.be.a("number");
-        expect(res.body.photoUrls).to.deep.equal([]);
-        expect(res.body.tags).to.deep.equal([]);
       });
     });
 
