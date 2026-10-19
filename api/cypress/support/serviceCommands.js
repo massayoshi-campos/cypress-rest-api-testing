@@ -315,4 +315,19 @@ Cypress.Commands.add(
   },
 );
 
-
+Cypress.Commands.add("apiKeyFormUrlEncodedRequest", (url, formData) => {
+  return cy.setupApiKeyToken().then((apiKeyToken) => {
+    return cy.request({
+      method: "POST",
+      url,
+      headers: {
+        api_key: apiKeyToken,
+        "Content-Type": "application/x-www-form-urlencoded",
+        accept: "application/json",
+      },
+      form: false,
+      body: new URLSearchParams(formData).toString(),
+      failOnStatusCode: false,
+    });
+  });
+});

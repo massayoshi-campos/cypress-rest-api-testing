@@ -403,6 +403,49 @@ describe("Petstore API - Pet CRUD Flow (Create, Read, Update, Find, Delete) - Po
           });
         });
     });
+
+    it("POST - should update a pet using form data", () => {
+      const petId = 341;
+      const petData = {
+        id: petId,
+        name: "Pet before form update",
+        photoUrls: [],
+        tags: [],
+        status: "available",
+      };
+
+      cy.serviceToPet
+        .createPet(petData)
+        .then((createRes) => {
+          expect(createRes.status).to.eq(200);
+
+          return cy.serviceToPet.updatePetWithForm(
+            petId,
+            "Pet after form update",
+            "sold",
+          );
+        })
+        .then((updateRes) => {
+          cy.log(`Form update status: ${updateRes.status}`);
+          cy.log(`Form update body: ${JSON.stringify(updateRes.body)}`);
+
+          expect(updateRes.status).to.eq(200);
+
+          return cy.serviceToPet.getPetById(petId);
+        })
+        .then((getRes) => {
+          expect(getRes.status).to.eq(200);
+          expect(getRes.body.id).to.eq(petId);
+          expect(getRes.body.name).to.eq("Pet after form update");
+          expect(getRes.body.status).to.eq("sold");
+        })
+        .then(() => {
+          return cy.serviceToPet.deletePetById(petId);
+        })
+        .then((deleteRes) => {
+          expect(deleteRes.status).to.be.oneOf([200, 204]);
+        });
+    });
   });
 });
 

@@ -30,4 +30,11 @@ cy.serviceToPet = {
   uploadPetImage: (petId, filePath, additionalMetadata = "") => {
     return cy.apiKeyUploadPetImage(petId, filePath, additionalMetadata);
   },
+
+  updatePetWithForm: (petId, name, status) => {
+    return cy.apiKeyFormUrlEncodedRequest(`pet/${petId}`, {
+      name,
+      status,
+    });
+  },
 };
