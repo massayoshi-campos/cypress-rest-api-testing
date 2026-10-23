@@ -1,3 +1,4 @@
+
 name: Cypress API Tests
 
 on:
@@ -6,9 +7,25 @@ on:
   pull_request:
     branches: [main]
 
+# ------------------------------------------------------------------------------
+# System Test Jobs - QA (Petstore API)
+# ------------------------------------------------------------------------------
+
 jobs:
-  test-api-qa-petstore:
+  test-api-qa:
+    name: QA - ${{ matrix.resource }}
     runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - resource: Pet
+            spec: cypress/e2e/pet/createPet.cy.js
+          - resource: Store
+            spec: cypress/e2e/store/createOrder.cy.js
+          - resource: User
+            spec: cypress/e2e/user/createUser.cy.js
 
     steps:
       - name: Checkout repository
@@ -18,68 +35,32 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: npm
+          cache-dependency-path: api/package-lock.json
 
       - name: Install dependencies
         working-directory: api
-        run: npm install
+        run: npm ci
 
       - name: Show Brazil date and time
         run: |
           echo "Current Date and Time (Brazil): $(TZ=America/Sao_Paulo date '+%d/%m/%Y %H:%M:%S')"
 
-      # ------------------------------------------------------------------------------
-      # System Test Jobs - QA (Petstore API)
-      # ------------------------------------------------------------------------------
-
-      - name: Run Cypress API tests - Pet
+      - name: Run Cypress API tests
         working-directory: api
+        env:
+          SPEC: ${{ matrix.spec }}
         run: |
-          npm run test-qa -- --spec "cypress/e2e/pet/createPet.cy.js"
-      
-      - name: Run Cypress API tests - Store
-        working-directory: api
-        run: |
-          npm run test-qa -- --spec "cypress/e2e/store/createOrder.cy.js"
+          echo "Running spec: $SPEC"
+          npm run test-qa -- --spec "$SPEC"
 
-      - name: Run Cypress API tests - User
-        working-directory: api
-        run: |
-          npm run test-qa -- --spec "cypress/e2e/user/createUser.cy.js"
-
-      # -------- REPORTS --------
-
-      - name: Merge Mochawesome JSON reports
-        working-directory: api
-        run: npm run cypress:merge-reports-json
-
-      - name: Generate Mochawesome HTML
-        working-directory: api
-        run: npm run cypress:generate-report-html
-
-      - name: Merge Mochawesome HTML
-        working-directory: api
-        run: npm run cypress:merge-report-html
-
-      - name: List report files
-        working-directory: api
-        run: ls -al mochawesome-report/
-
-      # -------- UPLOAD ARTIFACTS --------
-
-      - name: Upload Mochawesome HTML report
+      - name: Upload test reports
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: mochawesome-report
-          path: api/mochawesome-report/
-
-      - name: Upload Cypress screenshots
-        uses: actions/upload-artifact@v4
-        with:
-          name: cypress-screenshots
-          path: api/cypress/reports/screenshots/
-
-      - name: Upload JUnit XML
-        uses: actions/upload-artifact@v4
-        with:
-          name: junit-report
-          path: api/mochawesome-report/junit-report-*.xml
+          name: cypress-reports-${{ matrix.resource }}
+          path: |
+            api/mochawesome-report/
+            api/cypress/reports/
+          if-no-files-found: warn
+          retention-days: 7
