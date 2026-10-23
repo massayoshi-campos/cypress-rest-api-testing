@@ -1,4 +1,4 @@
-cy.serviceToUser = {
+cy.userService = {
   createUser: (userData) => {
     return cy.apiKeyRequestWithJsonBody("POST", "user", userData);
   },

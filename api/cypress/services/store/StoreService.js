@@ -1,6 +1,6 @@
 /// <reference types="cypress" />
 
-cy.serviceToStore = {
+cy.storeService = {
   getInventory: () => {
     return cy.apiKeyRequest("GET", "store/inventory");
   },

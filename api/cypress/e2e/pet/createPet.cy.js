@@ -1,11 +1,11 @@
-import "../../services/pet/createPetService";
+import "../../services/pet/petService";
 
-describe("Petstore API - Pet CRUD Flow (Create, Read, Update, Find, Delete) - Positive Test Scenario", () => {
+describe("Petstore API - Pet CRUD Operations - Positive Scenarios", () => {
   context("REST Feature", { tags: "rest" }, () => {
     it(`POST - should create a new pet successfully`, () => {
-      cy.fixture("pet/test_b.json").then((requestData) => {
+      cy.fixture("pet/pet_golden_retriever.json").then((requestData) => {
         cy.validateDetailsResponse(
-          () => cy.serviceToPet.createPet(requestData),
+          () => cy.petService.createPet(requestData),
           200,
           "OK",
           true,
@@ -57,7 +57,7 @@ describe("Petstore API - Pet CRUD Flow (Create, Read, Update, Find, Delete) - Po
 
     it("GET - should return the pet by id", () => {
       cy.validateDetailsResponse(
-        () => cy.serviceToPet.getPetById(337),
+        () => cy.petService.getPetById(337),
         200,
         "OK",
         true,
@@ -107,9 +107,9 @@ describe("Petstore API - Pet CRUD Flow (Create, Read, Update, Find, Delete) - Po
     });
 
     it(`PUT - should update the pet successfully`, () => {
-      cy.fixture("pet/test_c.json").then((requestData) => {
+      cy.fixture("pet/pet_persa.json").then((requestData) => {
         cy.validateDetailsResponse(
-          () => cy.serviceToPet.updatePet(requestData),
+          () => cy.petService.updatePet(requestData),
           200,
           "OK",
           true,
@@ -134,11 +134,8 @@ describe("Petstore API - Pet CRUD Flow (Create, Read, Update, Find, Delete) - Po
             name: "vaccinated",
           });
 
-          // Validate data types
           expect(responseBody.id).to.be.a("number");
-
           expect(responseBody.name).to.be.a("string").and.not.be.empty;
-
           expect(responseBody.category).to.be.an("object");
           expect(responseBody.category.id).to.be.a("number");
           expect(responseBody.category.name).to.be.a("string");
@@ -167,7 +164,7 @@ describe("Petstore API - Pet CRUD Flow (Create, Read, Update, Find, Delete) - Po
 
     it(`GET - should find the updated pet by status`, () => {
       cy.validateDetailsResponse(
-        () => cy.serviceToPet.getPetsByStatus("pending"),
+        () => cy.petService.getPetsByStatus("pending"),
         200,
         "OK",
         true,
@@ -200,16 +197,14 @@ describe("Petstore API - Pet CRUD Flow (Create, Read, Update, Find, Delete) - Po
       });
     });
 
-    it("GET - should find and delete pet by available status", () => {
-      cy.fixture("pet/test_a.json").then((petData) => {
-        // POST - Create pet
-        cy.serviceToPet.createPet(petData).then((createRes) => {
+    it("POST/GET/DELETE - should manage a pet with available status", () => {
+      cy.fixture("pet/pet_available.json").then((petData) => {
+        cy.petService.createPet(petData).then((createRes) => {
           expect(createRes.status).to.eq(200);
           expect(createRes.body.id).to.eq(petData.id);
           expect(createRes.body.status).to.eq("available");
 
-          // GET - Find pet by status
-          cy.serviceToPet.getPetsByStatus("available").then((res) => {
+          cy.petService.getPetsByStatus("available").then((res) => {
             expect(res.status).to.eq(200);
             expect(res.body).to.be.an("array");
 
@@ -225,12 +220,10 @@ describe("Petstore API - Pet CRUD Flow (Create, Read, Update, Find, Delete) - Po
             expect(pet.tags).to.deep.equal(petData.tags);
           });
 
-          // DELETE - Delete pet
-          cy.serviceToPet.deletePetById(petData.id).then((deleteRes) => {
+          cy.petService.deletePetById(petData.id).then((deleteRes) => {
             expect(deleteRes.status).to.eq(200);
 
-            // GET - Verify pet was deleted
-            cy.serviceToPet.getPetById(petData.id).then((getRes) => {
+            cy.petService.getPetById(petData.id).then((getRes) => {
               expect(getRes.status).to.eq(404);
               expect(getRes.body.message).to.eq("Pet not found");
             });
@@ -239,16 +232,14 @@ describe("Petstore API - Pet CRUD Flow (Create, Read, Update, Find, Delete) - Po
       });
     });
 
-    it("GET - should find and delete pet by sold status", () => {
-      cy.fixture("pet/test_d.json").then((petData) => {
-        // POST - Create pet
-        cy.serviceToPet.createPet(petData).then((createRes) => {
+    it("POST/GET/DELETE - should manage a pet with sold status", () => {
+      cy.fixture("pet/pet_sold.json").then((petData) => {
+        cy.petService.createPet(petData).then((createRes) => {
           expect(createRes.status).to.eq(200);
           expect(createRes.body.id).to.eq(petData.id);
           expect(createRes.body.status).to.eq("sold");
 
-          // GET - Find pet by status
-          cy.serviceToPet.getPetsByStatus("sold").then((res) => {
+          cy.petService.getPetsByStatus("sold").then((res) => {
             expect(res.status).to.eq(200);
             expect(res.body).to.be.an("array");
 
@@ -264,12 +255,10 @@ describe("Petstore API - Pet CRUD Flow (Create, Read, Update, Find, Delete) - Po
             expect(pet.tags).to.deep.equal(petData.tags);
           });
 
-          // DELETE - Delete pet
-          cy.serviceToPet.deletePetById(petData.id).then((deleteRes) => {
+          cy.petService.deletePetById(petData.id).then((deleteRes) => {
             expect(deleteRes.status).to.eq(200);
 
-            // GET - Verify pet was deleted
-            cy.serviceToPet.getPetById(petData.id).then((getRes) => {
+            cy.petService.getPetById(petData.id).then((getRes) => {
               expect(getRes.status).to.eq(404);
               expect(getRes.body.message).to.eq("Pet not found");
             });
@@ -280,7 +269,7 @@ describe("Petstore API - Pet CRUD Flow (Create, Read, Update, Find, Delete) - Po
 
     it(`DELETE - should delete the pet successfully`, () => {
       cy.validateDetailsResponse(
-        () => cy.serviceToPet.deletePetById(337),
+        () => cy.petService.deletePetById(337),
         200,
         "OK",
         true,
@@ -293,15 +282,15 @@ describe("Petstore API - Pet CRUD Flow (Create, Read, Update, Find, Delete) - Po
     });
 
     it("GET - should return 404 after pet is deleted", () => {
-      cy.serviceToPet.getPetById(337).then((res) => {
+      cy.petService.getPetById(337).then((res) => {
         expect(res.status).to.eq(404);
         expect(res.body.message).to.eq("Pet not found");
       });
     });
 
     it("POST - should allow recreating the pet after deletion", () => {
-      cy.fixture("pet/test_b.json").then((requestData) => {
-        cy.serviceToPet.createPet(requestData).then((res) => {
+      cy.fixture("pet/pet_golden_retriever.json").then((requestData) => {
+        cy.petService.createPet(requestData).then((res) => {
           expect(res.status).to.eq(200);
           expect(res.body.id).to.eq(337);
         });
@@ -309,7 +298,7 @@ describe("Petstore API - Pet CRUD Flow (Create, Read, Update, Find, Delete) - Po
     });
 
     it("GET - should return a valid pet contract", () => {
-      cy.serviceToPet.getPetById(337).then((res) => {
+      cy.petService.getPetById(337).then((res) => {
         expect(res.body).to.have.all.keys(
           "id",
           "category",
@@ -322,8 +311,8 @@ describe("Petstore API - Pet CRUD Flow (Create, Read, Update, Find, Delete) - Po
     });
 
     it("PUT - should allow updating the pet multiple times", () => {
-      cy.fixture("pet/test_c.json").then((update1) => {
-        cy.serviceToPet.updatePet(update1).then((res) => {
+      cy.fixture("pet/pet_persa.json").then((update1) => {
+        cy.petService.updatePet(update1).then((res) => {
           expect(res.status).to.eq(200);
           expect(res.body).to.be.an("object");
 
@@ -336,8 +325,8 @@ describe("Petstore API - Pet CRUD Flow (Create, Read, Update, Find, Delete) - Po
             name: "Cats",
           });
 
-          cy.fixture("pet/test_b.json").then((update2) => {
-            cy.serviceToPet.updatePet(update2).then((res) => {
+          cy.fixture("pet/pet_golden_retriever.json").then((update2) => {
+            cy.petService.updatePet(update2).then((res) => {
               expect(res.status).to.eq(200);
               expect(res.body).to.be.an("object");
 
@@ -356,14 +345,14 @@ describe("Petstore API - Pet CRUD Flow (Create, Read, Update, Find, Delete) - Po
     });
 
     it("GET - should return the same data on repeated calls", () => {
-      cy.serviceToPet.getPetById(337).then((res1) => {
-        cy.serviceToPet.getPetById(337).then((res2) => {
+      cy.petService.getPetById(337).then((res1) => {
+        cy.petService.getPetById(337).then((res2) => {
           expect(res1.body).to.deep.equal(res2.body);
         });
       });
     });
 
-    it("POST - should create a pet, upload an image and delete it", () => {
+    it("POST - should create a pet and upload its image", () => {
       const petId = 340;
 
       const petData = {
@@ -374,14 +363,14 @@ describe("Petstore API - Pet CRUD Flow (Create, Read, Update, Find, Delete) - Po
         status: "available",
       };
 
-      cy.serviceToPet
+      cy.petService
         .createPet(petData)
         .then((createRes) => {
           expect(createRes.status).to.eq(200);
           expect(createRes.body.id).to.eq(petId);
           expect(createRes.body.name).to.eq(petData.name);
 
-          return cy.serviceToPet.uploadPetImage(
+          return cy.petService.uploadPetImage(
             petId,
             "pet-image.png",
             "Cypress image upload",
@@ -398,13 +387,13 @@ describe("Petstore API - Pet CRUD Flow (Create, Read, Update, Find, Delete) - Po
           expect(uploadRes.body.message).to.include("pet-image.png");
         })
         .then(() => {
-          cy.serviceToPet.deletePetById(petId).then((deleteRes) => {
+          cy.petService.deletePetById(petId).then((deleteRes) => {
             expect(deleteRes.status).to.be.oneOf([200, 204]);
           });
         });
     });
 
-    it("POST - should update a pet using form data", () => {
+    it("POST - should update a pet using form data successfully", () => {
       const petId = 341;
       const petData = {
         id: petId,
@@ -414,12 +403,12 @@ describe("Petstore API - Pet CRUD Flow (Create, Read, Update, Find, Delete) - Po
         status: "available",
       };
 
-      cy.serviceToPet
+      cy.petService
         .createPet(petData)
         .then((createRes) => {
           expect(createRes.status).to.eq(200);
 
-          return cy.serviceToPet.updatePetWithForm(
+          return cy.petService.updatePetWithForm(
             petId,
             "Pet after form update",
             "sold",
@@ -431,7 +420,7 @@ describe("Petstore API - Pet CRUD Flow (Create, Read, Update, Find, Delete) - Po
 
           expect(updateRes.status).to.eq(200);
 
-          return cy.serviceToPet.getPetById(petId);
+          return cy.petService.getPetById(petId);
         })
         .then((getRes) => {
           expect(getRes.status).to.eq(200);
@@ -440,7 +429,7 @@ describe("Petstore API - Pet CRUD Flow (Create, Read, Update, Find, Delete) - Po
           expect(getRes.body.status).to.eq("sold");
         })
         .then(() => {
-          return cy.serviceToPet.deletePetById(petId);
+          return cy.petService.deletePetById(petId);
         })
         .then((deleteRes) => {
           expect(deleteRes.status).to.be.oneOf([200, 204]);
@@ -449,7 +438,7 @@ describe("Petstore API - Pet CRUD Flow (Create, Read, Update, Find, Delete) - Po
   });
 });
 
-describe("Petstore API - Authentication and Validation - Negative Test Scenarios", () => {
+describe("Petstore API - Pet CRUD Operations - Negative Scenarios", () => {
   context("REST Feature", { tags: "rest" }, () => {
     it("POST - should not accept invalid data types", () => {
       const invalidBody = {
@@ -463,6 +452,73 @@ describe("Petstore API - Authentication and Validation - Negative Test Scenarios
       });
     });
 
+    it("GET - should return 404 for an invalid endpoint", () => {
+      cy.petService.callWrongEndpoint().then((res) => {
+        expect(res.status).to.eq(404);
+      });
+    });
+
+    it("GET - should reject a non-numeric pet ID", () => {
+      const invalidPetId = "abc";
+
+      cy.petService.getPetById(invalidPetId).then((res) => {
+        expect(res.status).to.be.oneOf([400, 404]);
+      });
+    });
+
+    it("GET - should return 404 for pet ID zero", () => {
+      cy.petService.getPetById(0).then((res) => {
+        expect(res.status).to.eq(404);
+        expect(res.body).to.have.property("message", "Pet not found");
+      });
+    });
+
+    it("PATCH - should reject unsupported HTTP method", () => {
+      cy.petService.callInvalidMethod().then((res) => {
+        expect(res.status).to.be.oneOf([400, 405]);
+      });
+    });
+
+    it("GET - should return 404 for a non-existent pet ID", () => {
+      const nonExistentPetId = 999999999999;
+
+      cy.petService.getPetById(nonExistentPetId).then((res) => {
+        expect(res.status).to.eq(404);
+        expect(res.body).to.have.property("message", "Pet not found");
+      });
+    });
+
+    it("PUT - should handle invalid data types", () => {
+      const invalidBody = {
+        id: "ABC",
+        name: true,
+        status: 999,
+      };
+
+      cy.petService.updatePet(invalidBody).then((res) => {
+        expect(res.status).to.eq(500);
+
+        expect(res.body).to.deep.equal({
+          code: 500,
+          type: "unknown",
+          message: "something bad happened",
+        });
+      });
+    });
+
+    it("DELETE - should handle a non-existent pet ID", () => {
+      const nonExistentPetId = 999999999999;
+
+      cy.petService.deletePetById(nonExistentPetId).then((res) => {
+        expect(res.status).to.eq(404);
+        expect(res.body).to.be.empty;
+      });
+    });
+  });
+});
+
+describe("Pet API - Edge Cases and API Behavior", () => {
+  context("REST Feature", { tags: "rest" }, () => {
     it("POST - should handle a partial JSON body", () => {
       const partialBody = {
         name: "Pet without remaining fields",
@@ -484,46 +540,10 @@ describe("Petstore API - Authentication and Validation - Negative Test Scenarios
       });
     });
 
-    it("GET - should return 404 for wrong endpoint", () => {
-      cy.serviceToPet.callWrongEndpoint().then((res) => {
-        expect(res.status).to.eq(404);
-      });
-    });
-
-    it("GET - should return an error for an invalid pet ID", () => {
-      const invalidPetId = "abc";
-
-      cy.serviceToPet.getPetById(invalidPetId).then((res) => {
-        expect(res.status).to.be.oneOf([400, 404]);
-      });
-    });
-
-    it("GET - should return 404 for pet ID zero", () => {
-      cy.serviceToPet.getPetById(0).then((res) => {
-        expect(res.status).to.eq(404);
-        expect(res.body).to.have.property("message", "Pet not found");
-      });
-    });
-
-    it("PATCH - should reject unsupported HTTP method", () => {
-      cy.serviceToPet.callInvalidMethod().then((res) => {
-        expect(res.status).to.be.oneOf([400, 405]);
-      });
-    });
-
-    it("GET - should return 404 for a non-existent pet ID", () => {
-      const nonExistentPetId = 999999999999;
-
-      cy.serviceToPet.getPetById(nonExistentPetId).then((res) => {
-        expect(res.status).to.eq(404);
-        expect(res.body).to.have.property("message", "Pet not found");
-      });
-    });
-
     it("PUT - should handle an empty JSON body", () => {
       const emptyBody = {};
 
-      cy.serviceToPet.updatePet(emptyBody).then((res) => {
+      cy.petService.updatePet(emptyBody).then((res) => {
         expect(res.status).to.eq(200);
         expect(res.body).to.be.an("object");
 
@@ -540,7 +560,7 @@ describe("Petstore API - Authentication and Validation - Negative Test Scenarios
         name: "Pet updated with partial body",
       };
 
-      cy.serviceToPet.updatePet(partialBody).then((res) => {
+      cy.petService.updatePet(partialBody).then((res) => {
         expect(res.status).to.eq(200);
         expect(res.body).to.be.an("object");
 
@@ -556,67 +576,40 @@ describe("Petstore API - Authentication and Validation - Negative Test Scenarios
       });
     });
 
-    it("PUT - should handle invalid data types", () => {
-      const invalidBody = {
-        id: "ABC",
-        name: true,
-        status: 999,
-      };
-
-      cy.serviceToPet.updatePet(invalidBody).then((res) => {
-        expect(res.status).to.eq(500);
-
-        expect(res.body).to.deep.equal({
-          code: 500,
-          type: "unknown",
-          message: "something bad happened",
-        });
-      });
-    });
-
-    it("GET - should return an empty array for an invalid pet status", () => {
-      cy.serviceToPet.getPetsByStatus("unknown").then((res) => {
+    it("GET - should return an empty array for an unknown pet status", () => {
+      cy.petService.getPetsByStatus("unknown").then((res) => {
         expect(res.status).to.eq(200);
         expect(res.body).to.be.an("array").that.is.empty;
       });
     });
 
-    it("DELETE - should handle a non-existent pet ID", () => {
-      const nonExistentPetId = 999999999999;
-
-      cy.serviceToPet.deletePetById(nonExistentPetId).then((res) => {
-        expect(res.status).to.eq(404);
-        expect(res.body).to.be.empty;
-      });
-    });
-
-    it("PUT - should handle updating a non-existent pet ID", () => {
-      cy.fixture("pet/test_b.json").then((petData) => {
+    it("PUT - should create a pet when the ID does not exist", () => {
+      cy.fixture("pet/pet_golden_retriever.json").then((petData) => {
         const nonExistentPet = {
           ...petData,
           id: 999999999998,
           name: "Pet Updated With Non-existent ID",
         };
 
-        cy.serviceToPet.updatePet(nonExistentPet).then((res) => {
+        cy.petService.updatePet(nonExistentPet).then((res) => {
           expect(res.status).to.eq(200);
           expect(res.body.id).to.eq(nonExistentPet.id);
           expect(res.body.name).to.eq(nonExistentPet.name);
         });
 
         // GET - Verify the pet created by PUT
-        cy.serviceToPet.getPetById(nonExistentPet.id).then((getRes) => {
+        cy.petService.getPetById(nonExistentPet.id).then((getRes) => {
           expect(getRes.status).to.eq(200);
           expect(getRes.body.id).to.eq(nonExistentPet.id);
           expect(getRes.body.name).to.eq(nonExistentPet.name);
         });
 
         // DELETE - Clean up the test data
-        cy.serviceToPet.deletePetById(nonExistentPet.id).then((deleteRes) => {
+        cy.petService.deletePetById(nonExistentPet.id).then((deleteRes) => {
           expect(deleteRes.status).to.eq(200);
 
           // GET - Verify the pet was deleted
-          cy.serviceToPet.getPetById(nonExistentPet.id).then((verifyRes) => {
+          cy.petService.getPetById(nonExistentPet.id).then((verifyRes) => {
             expect(verifyRes.status).to.eq(404);
             expect(verifyRes.body.message).to.eq("Pet not found");
           });

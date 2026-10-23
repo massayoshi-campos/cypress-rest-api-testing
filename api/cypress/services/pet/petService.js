@@ -1,4 +1,4 @@
-cy.serviceToPet = {
+cy.petService = {
   getPetsByStatus: (status) => {
     return cy.apiKeyRequest("GET", `pet/findByStatus?status=${status}`);
   },

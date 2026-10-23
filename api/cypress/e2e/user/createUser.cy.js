@@ -1,11 +1,11 @@
-import "../../services/user/UserService";
+import "../../services/user/userService";
 
-describe("User API", () => {
+describe("User API - Positive Scenarios", () => {
   context("REST Feature", { tags: "rest" }, () => {
     it("POST - should create a new user successfully", () => {
       cy.fixture("user/user.json").then((userData) => {
         cy.validateDetailsResponse(
-          () => cy.serviceToUser.createUser(userData),
+          () => cy.userService.createUser(userData),
           200,
           "OK",
           true,
@@ -23,7 +23,7 @@ describe("User API", () => {
     it("GET - should return the user by username", () => {
       cy.fixture("user/user.json").then((userData) => {
         cy.validateDetailsResponse(
-          () => cy.serviceToUser.getUserByUsername(userData.username),
+          () => cy.userService.getUserByUsername(userData.username),
           200,
           "OK",
           true,
@@ -57,7 +57,7 @@ describe("User API", () => {
           };
 
           cy.validateDetailsResponse(
-            () => cy.serviceToUser.updateUser(userData.username, updatedUser),
+            () => cy.userService.updateUser(userData.username, updatedUser),
             200,
             "OK",
             true,
@@ -70,17 +70,15 @@ describe("User API", () => {
             expect(responseBody.message).to.eq(String(userData.id));
           });
 
-          cy.serviceToUser
-            .getUserByUsername(userData.username)
-            .then((getRes) => {
-              expect(getRes.status).to.eq(200);
-              expect(getRes.body.username).to.eq(userData.username);
-              expect(getRes.body.firstName).to.eq(updatedUser.firstName);
-              expect(getRes.body.lastName).to.eq(updatedUser.lastName);
-              expect(getRes.body.email).to.eq(updatedUser.email);
-              expect(getRes.body.phone).to.eq(updatedUser.phone);
-              expect(getRes.body.userStatus).to.eq(updatedUser.userStatus);
-            });
+          cy.userService.getUserByUsername(userData.username).then((getRes) => {
+            expect(getRes.status).to.eq(200);
+            expect(getRes.body.username).to.eq(userData.username);
+            expect(getRes.body.firstName).to.eq(updatedUser.firstName);
+            expect(getRes.body.lastName).to.eq(updatedUser.lastName);
+            expect(getRes.body.email).to.eq(updatedUser.email);
+            expect(getRes.body.phone).to.eq(updatedUser.phone);
+            expect(getRes.body.userStatus).to.eq(updatedUser.userStatus);
+          });
         });
       });
     });
@@ -88,7 +86,7 @@ describe("User API", () => {
     it("DELETE - should delete the user successfully", () => {
       cy.fixture("user/user.json").then((userData) => {
         cy.validateDetailsResponse(
-          () => cy.serviceToUser.deleteUser(userData.username),
+          () => cy.userService.deleteUser(userData.username),
           200,
           "OK",
           true,
@@ -101,7 +99,7 @@ describe("User API", () => {
           expect(responseBody.message).to.eq(userData.username);
         });
 
-        cy.serviceToUser.getUserByUsername(userData.username).then((getRes) => {
+        cy.userService.getUserByUsername(userData.username).then((getRes) => {
           expect(getRes.status).to.eq(404);
         });
       });
@@ -109,10 +107,10 @@ describe("User API", () => {
 
     it("GET - should login successfully with valid credentials", () => {
       cy.fixture("user/user.json").then((userData) => {
-        cy.serviceToUser.createUser(userData).then((createRes) => {
+        cy.userService.createUser(userData).then((createRes) => {
           expect(createRes.status).to.eq(200);
 
-          cy.serviceToUser
+          cy.userService
             .login(userData.username, userData.password)
             .then((loginRes) => {
               expect(loginRes.status).to.eq(200);
@@ -125,7 +123,7 @@ describe("User API", () => {
               expect(loginRes.headers).to.have.property("x-rate-limit");
             })
             .then(() => {
-              return cy.serviceToUser.deleteUser(userData.username);
+              return cy.userService.deleteUser(userData.username);
             })
             .then((deleteRes) => {
               expect(deleteRes.status).to.eq(200);
@@ -135,7 +133,7 @@ describe("User API", () => {
     });
 
     it("GET - should logout successfully", () => {
-      cy.serviceToUser.logout().then((res) => {
+      cy.userService.logout().then((res) => {
         cy.log(`HTTP status: ${res.status}`);
         cy.log(`Response body: ${JSON.stringify(res.body)}`);
 
@@ -145,7 +143,7 @@ describe("User API", () => {
 
     it("POST - should create users with an array successfully", () => {
       cy.fixture("user/usersArray.json").then((usersData) => {
-        cy.serviceToUser.createUsersWithArray(usersData).then((res) => {
+        cy.userService.createUsersWithArray(usersData).then((res) => {
           expect(res.status).to.eq(200);
           expect(res.body).to.be.an("object");
           expect(res.body).to.have.property("code", 200);
@@ -154,29 +152,21 @@ describe("User API", () => {
         });
 
         usersData.forEach((userData) => {
-          cy.serviceToUser
-            .getUserByUsername(userData.username)
-            .then((getRes) => {
-              expect(getRes.status).to.eq(200);
-              expect(getRes.body).to.have.property("id", userData.id);
-              expect(getRes.body).to.have.property(
-                "username",
-                userData.username,
-              );
-              expect(getRes.body).to.have.property(
-                "firstName",
-                userData.firstName,
-              );
-              expect(getRes.body).to.have.property(
-                "lastName",
-                userData.lastName,
-              );
-              expect(getRes.body).to.have.property("email", userData.email);
-            });
+          cy.userService.getUserByUsername(userData.username).then((getRes) => {
+            expect(getRes.status).to.eq(200);
+            expect(getRes.body).to.have.property("id", userData.id);
+            expect(getRes.body).to.have.property("username", userData.username);
+            expect(getRes.body).to.have.property(
+              "firstName",
+              userData.firstName,
+            );
+            expect(getRes.body).to.have.property("lastName", userData.lastName);
+            expect(getRes.body).to.have.property("email", userData.email);
+          });
         });
 
         usersData.forEach((userData) => {
-          cy.serviceToUser.deleteUser(userData.username).then((deleteRes) => {
+          cy.userService.deleteUser(userData.username).then((deleteRes) => {
             expect(deleteRes.status).to.eq(200);
           });
         });
@@ -185,7 +175,7 @@ describe("User API", () => {
 
     it("POST - should create users with a list successfully", () => {
       cy.fixture("user/usersList.json").then((usersData) => {
-        cy.serviceToUser.createUsersWithList(usersData).then((res) => {
+        cy.userService.createUsersWithList(usersData).then((res) => {
           cy.log(`HTTP status: ${res.status}`);
           cy.log(`Response body: ${JSON.stringify(res.body)}`);
 
@@ -197,29 +187,21 @@ describe("User API", () => {
         });
 
         usersData.forEach((userData) => {
-          cy.serviceToUser
-            .getUserByUsername(userData.username)
-            .then((getRes) => {
-              expect(getRes.status).to.eq(200);
-              expect(getRes.body).to.have.property("id", userData.id);
-              expect(getRes.body).to.have.property(
-                "username",
-                userData.username,
-              );
-              expect(getRes.body).to.have.property(
-                "firstName",
-                userData.firstName,
-              );
-              expect(getRes.body).to.have.property(
-                "lastName",
-                userData.lastName,
-              );
-              expect(getRes.body).to.have.property("email", userData.email);
-            });
+          cy.userService.getUserByUsername(userData.username).then((getRes) => {
+            expect(getRes.status).to.eq(200);
+            expect(getRes.body).to.have.property("id", userData.id);
+            expect(getRes.body).to.have.property("username", userData.username);
+            expect(getRes.body).to.have.property(
+              "firstName",
+              userData.firstName,
+            );
+            expect(getRes.body).to.have.property("lastName", userData.lastName);
+            expect(getRes.body).to.have.property("email", userData.email);
+          });
         });
 
         usersData.forEach((userData) => {
-          cy.serviceToUser.deleteUser(userData.username).then((deleteRes) => {
+          cy.userService.deleteUser(userData.username).then((deleteRes) => {
             expect(deleteRes.status).to.eq(200);
           });
         });
@@ -228,12 +210,12 @@ describe("User API", () => {
   });
 });
 
-describe("Negative Test Scenarios", () => {
+describe("User API - Negative Scenarios", () => {
   context("REST Feature", { tags: "rest" }, () => {
     it("GET - should return 404 for a non-existent user", () => {
       const username = "cypress_user_not_found_9999";
 
-      cy.serviceToUser.getUserByUsername(username).then((res) => {
+      cy.userService.getUserByUsername(username).then((res) => {
         cy.log(`HTTP status: ${res.status}`);
         cy.log(`Response body: ${JSON.stringify(res.body)}`);
 
@@ -248,7 +230,7 @@ describe("Negative Test Scenarios", () => {
       const username = "cypress_user_invalid_9999";
       const password = "WrongPassword123!";
 
-      cy.serviceToUser.login(username, password).then((res) => {
+      cy.userService.login(username, password).then((res) => {
         cy.log(`HTTP status: ${res.status}`);
         cy.log(`Response body: ${JSON.stringify(res.body)}`);
 
@@ -264,7 +246,7 @@ describe("Negative Test Scenarios", () => {
     it("DELETE - should return 404 for a non-existent user", () => {
       const username = "cypress_user_delete_not_found_9999";
 
-      cy.serviceToUser.deleteUser(username).then((res) => {
+      cy.userService.deleteUser(username).then((res) => {
         cy.log(`HTTP status: ${res.status}`);
         cy.log(`Response body: ${JSON.stringify(res.body)}`);
 
@@ -275,7 +257,7 @@ describe("Negative Test Scenarios", () => {
 
     it("PUT - should investigate updating a non-existent user", () => {
       cy.fixture("user/nonExistentUser.json").then((userData) => {
-        cy.serviceToUser
+        cy.userService
           .updateUser(userData.username, userData)
           .then((res) => {
             cy.log(`HTTP status: ${res.status}`);
@@ -285,7 +267,7 @@ describe("Negative Test Scenarios", () => {
             expect(res.body).to.have.property("code", 200);
             expect(res.body).to.have.property("message", String(userData.id));
 
-            return cy.serviceToUser.getUserByUsername(userData.username);
+            return cy.userService.getUserByUsername(userData.username);
           })
           .then((getRes) => {
             expect(getRes.status).to.eq(200);
@@ -296,7 +278,7 @@ describe("Negative Test Scenarios", () => {
               userData.firstName,
             );
 
-            return cy.serviceToUser.deleteUser(userData.username);
+            return cy.userService.deleteUser(userData.username);
           })
           .then((deleteRes) => {
             expect(deleteRes.status).to.eq(200);
@@ -304,20 +286,9 @@ describe("Negative Test Scenarios", () => {
       });
     });
 
-    it("GET - should return 404 for a username with special characters", () => {
-      const username = "invalid user!@#";
-
-      cy.serviceToUser.getUserByUsername(username).then((res) => {
-        cy.log(`HTTP status: ${res.status}`);
-        cy.log(`Response body: ${JSON.stringify(res.body)}`);
-
-        expect(res.status).to.eq(404);
-      });
-    });
-
     it("POST - should investigate creating a user with invalid data types", () => {
       cy.fixture("user/invalidUser.json").then((userData) => {
-        cy.serviceToUser.createUser(userData).then((res) => {
+        cy.userService.createUser(userData).then((res) => {
           cy.log(`HTTP status: ${res.status}`);
           cy.log(`Response body: ${JSON.stringify(res.body)}`);
 
@@ -333,7 +304,7 @@ describe("Negative Test Scenarios", () => {
 
     it("POST - should investigate creating a user with a partial body", () => {
       cy.fixture("user/partialUser.json").then((userData) => {
-        cy.serviceToUser.createUser(userData).then((res) => {
+        cy.userService.createUser(userData).then((res) => {
           cy.log(`HTTP status: ${res.status}`);
           cy.log(`Response body: ${JSON.stringify(res.body)}`);
 
@@ -341,7 +312,7 @@ describe("Negative Test Scenarios", () => {
           expect(res.body).to.have.property("code", 200);
           expect(res.body).to.have.property("message", String(userData.id));
 
-          return cy.serviceToUser
+          return cy.userService
             .getUserByUsername(userData.username)
             .then((getRes) => {
               expect(getRes.status).to.eq(200);
@@ -351,7 +322,7 @@ describe("Negative Test Scenarios", () => {
                 userData.username,
               );
 
-              return cy.serviceToUser
+              return cy.userService
                 .deleteUser(userData.username)
                 .then((deleteRes) => {
                   expect(deleteRes.status).to.eq(200);
@@ -361,9 +332,56 @@ describe("Negative Test Scenarios", () => {
       });
     });
 
+    it("POST - should investigate creating a user with a string ID", () => {
+      cy.fixture("user/stringUserId.json").then((userData) => {
+        cy.userService.createUser(userData).then((res) => {
+          cy.log(`HTTP status: ${res.status}`);
+          cy.log(`Response body: ${JSON.stringify(res.body)}`);
+
+          expect(res.status).to.eq(500);
+          expect(res.body).to.deep.equal({
+            code: 500,
+            type: "unknown",
+            message: "something bad happened",
+          });
+        });
+      });
+    });
+
+    it("POST - should reject a user with an invalid status", () => {
+      cy.fixture("user/invalidUserStatus.json").then((userData) => {
+        cy.userService.createUser(userData).then((res) => {
+          cy.log(`HTTP status: ${res.status}`);
+          cy.log(`Response body: ${JSON.stringify(res.body)}`);
+
+          expect(res.status).to.eq(500);
+          expect(res.body).to.deep.equal({
+            code: 500,
+            type: "unknown",
+            message: "something bad happened",
+          });
+        });
+      });
+    });
+  });
+});
+
+describe("User API - Edge Cases and API Behavior", () => {
+  context("REST Feature", { tags: "rest" }, () => {
+    it("GET - should return 404 for a username with special characters", () => {
+      const username = "invalid user!@#";
+
+      cy.userService.getUserByUsername(username).then((res) => {
+        cy.log(`HTTP status: ${res.status}`);
+        cy.log(`Response body: ${JSON.stringify(res.body)}`);
+
+        expect(res.status).to.eq(404);
+      });
+    });
+
     it("POST - should investigate creating a user with an empty username", () => {
       cy.fixture("user/emptyUsernameUser.json").then((userData) => {
-        cy.serviceToUser.createUser(userData).then((res) => {
+        cy.userService.createUser(userData).then((res) => {
           cy.log(`HTTP status: ${res.status}`);
           cy.log(`Response body: ${JSON.stringify(res.body)}`);
 
@@ -373,13 +391,13 @@ describe("Negative Test Scenarios", () => {
             expect(res.body).to.have.property("code", 200);
             expect(res.body).to.have.property("message", String(userData.id));
 
-            return cy.serviceToUser
+            return cy.userService
               .getUserByUsername(userData.username)
               .then((getRes) => {
                 cy.log(`GET HTTP status: ${getRes.status}`);
                 cy.log(`GET response body: ${JSON.stringify(getRes.body)}`);
 
-                return cy.serviceToUser
+                return cy.userService
                   .deleteUser(userData.username)
                   .then((deleteRes) => {
                     cy.log(`DELETE HTTP status: ${deleteRes.status}`);
@@ -395,7 +413,7 @@ describe("Negative Test Scenarios", () => {
 
     it("POST - should investigate creating a user with an empty email", () => {
       cy.fixture("user/emptyEmailUser.json").then((userData) => {
-        cy.serviceToUser.createUser(userData).then((res) => {
+        cy.userService.createUser(userData).then((res) => {
           cy.log(`HTTP status: ${res.status}`);
           cy.log(`Response body: ${JSON.stringify(res.body)}`);
 
@@ -403,13 +421,13 @@ describe("Negative Test Scenarios", () => {
           expect(res.body).to.have.property("code", 200);
           expect(res.body).to.have.property("message", String(userData.id));
 
-          return cy.serviceToUser
+          return cy.userService
             .getUserByUsername(userData.username)
             .then((getRes) => {
               expect(getRes.status).to.eq(200);
               expect(getRes.body).to.have.property("email", "");
 
-              return cy.serviceToUser.deleteUser(userData.username);
+              return cy.userService.deleteUser(userData.username);
             })
             .then((deleteRes) => {
               expect(deleteRes.status).to.eq(200);
@@ -420,7 +438,7 @@ describe("Negative Test Scenarios", () => {
 
     it("POST - should investigate creating a user with an empty password", () => {
       cy.fixture("user/emptyPasswordUser.json").then((userData) => {
-        cy.serviceToUser.createUser(userData).then((res) => {
+        cy.userService.createUser(userData).then((res) => {
           cy.log(`HTTP status: ${res.status}`);
           cy.log(`Response body: ${JSON.stringify(res.body)}`);
 
@@ -428,13 +446,13 @@ describe("Negative Test Scenarios", () => {
           expect(res.body).to.have.property("code", 200);
           expect(res.body).to.have.property("message", String(userData.id));
 
-          return cy.serviceToUser
+          return cy.userService
             .getUserByUsername(userData.username)
             .then((getRes) => {
               expect(getRes.status).to.eq(200);
               expect(getRes.body).to.have.property("password", "");
 
-              return cy.serviceToUser.deleteUser(userData.username);
+              return cy.userService.deleteUser(userData.username);
             })
             .then((deleteRes) => {
               expect(deleteRes.status).to.eq(200);
@@ -443,25 +461,9 @@ describe("Negative Test Scenarios", () => {
       });
     });
 
-    it("POST - should investigate creating a user with an invalid status", () => {
-      cy.fixture("user/invalidUserStatus.json").then((userData) => {
-        cy.serviceToUser.createUser(userData).then((res) => {
-          cy.log(`HTTP status: ${res.status}`);
-          cy.log(`Response body: ${JSON.stringify(res.body)}`);
-
-          expect(res.status).to.eq(500);
-          expect(res.body).to.deep.equal({
-            code: 500,
-            type: "unknown",
-            message: "something bad happened",
-          });
-        });
-      });
-    });
-
-    it("POST - should investigate creating a user with a negative status", () => {
+    it("POST - should accept a user with a negative status", () => {
       cy.fixture("user/negativeUserStatus.json").then((userData) => {
-        cy.serviceToUser.createUser(userData).then((res) => {
+        cy.userService.createUser(userData).then((res) => {
           cy.log(`HTTP status: ${res.status}`);
           cy.log(`Response body: ${JSON.stringify(res.body)}`);
 
@@ -469,7 +471,7 @@ describe("Negative Test Scenarios", () => {
           expect(res.body).to.have.property("code", 200);
           expect(res.body).to.have.property("message", String(userData.id));
 
-          return cy.serviceToUser
+          return cy.userService
             .getUserByUsername(userData.username)
             .then((getRes) => {
               expect(getRes.status).to.eq(200);
@@ -478,7 +480,7 @@ describe("Negative Test Scenarios", () => {
                 userData.userStatus,
               );
 
-              return cy.serviceToUser.deleteUser(userData.username);
+              return cy.userService.deleteUser(userData.username);
             })
             .then((deleteRes) => {
               expect(deleteRes.status).to.eq(200);
@@ -489,7 +491,7 @@ describe("Negative Test Scenarios", () => {
 
     it("POST - should investigate creating a user with a negative ID", () => {
       cy.fixture("user/negativeUserId.json").then((userData) => {
-        cy.serviceToUser.createUser(userData).then((res) => {
+        cy.userService.createUser(userData).then((res) => {
           cy.log(`HTTP status: ${res.status}`);
           cy.log(`Response body: ${JSON.stringify(res.body)}`);
 
@@ -499,7 +501,7 @@ describe("Negative Test Scenarios", () => {
 
           const returnedId = res.body.message;
 
-          return cy.serviceToUser
+          return cy.userService
             .getUserByUsername(userData.username)
             .then((getRes) => {
               cy.log(`GET response body: ${JSON.stringify(getRes.body)}`);
@@ -518,7 +520,7 @@ describe("Negative Test Scenarios", () => {
                 );
               }
 
-              return cy.serviceToUser.deleteUser(userData.username);
+              return cy.userService.deleteUser(userData.username);
             })
             .then((deleteRes) => {
               expect(deleteRes.status).to.eq(200);
@@ -527,25 +529,9 @@ describe("Negative Test Scenarios", () => {
       });
     });
 
-    it("POST - should investigate creating a user with a string ID", () => {
-      cy.fixture("user/stringUserId.json").then((userData) => {
-        cy.serviceToUser.createUser(userData).then((res) => {
-          cy.log(`HTTP status: ${res.status}`);
-          cy.log(`Response body: ${JSON.stringify(res.body)}`);
-
-          expect(res.status).to.eq(500);
-          expect(res.body).to.deep.equal({
-            code: 500,
-            type: "unknown",
-            message: "something bad happened",
-          });
-        });
-      });
-    });
-
     it("POST - should investigate creating a user with a whitespace-only username", () => {
       cy.fixture("user/whitespaceUsernameUser.json").then((userData) => {
-        cy.serviceToUser.createUser(userData).then((res) => {
+        cy.userService.createUser(userData).then((res) => {
           cy.log(`HTTP status: ${res.status}`);
           cy.log(`Response body: ${JSON.stringify(res.body)}`);
 
@@ -553,14 +539,14 @@ describe("Negative Test Scenarios", () => {
           expect(res.body).to.have.property("code", 200);
           expect(res.body.message).to.be.a("string").and.not.be.empty;
 
-          return cy.serviceToUser
+          return cy.userService
             .getUserByUsername(userData.username)
             .then((getRes) => {
               cy.log(`GET HTTP status: ${getRes.status}`);
               cy.log(`GET response body: ${JSON.stringify(getRes.body)}`);
 
               if (getRes.status === 200) {
-                return cy.serviceToUser
+                return cy.userService
                   .deleteUser(userData.username)
                   .then((deleteRes) => {
                     cy.log(`DELETE HTTP status: ${deleteRes.status}`);

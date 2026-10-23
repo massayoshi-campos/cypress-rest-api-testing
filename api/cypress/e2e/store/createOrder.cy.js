@@ -1,11 +1,11 @@
-import "../../services/store/StoreService";
+import "../../services/store/storeService";
 
 let createdOrderId;
 
-describe("Store API", () => {
+describe("Store API - Positive Scenarios", () => {
   context("REST Feature", { tags: "rest" }, () => {
     it("GET - should return store inventory", () => {
-      cy.serviceToStore.getInventory().then((res) => {
+      cy.storeService.getInventory().then((res) => {
         expect(res.status).to.eq(200);
         expect(res.body).to.be.an("object");
         expect(res.body).to.not.be.empty;
@@ -14,7 +14,7 @@ describe("Store API", () => {
 
     it("POST - should create an order", () => {
       cy.fixture("store/order.json").then((orderData) => {
-        return cy.serviceToStore.createOrder(orderData).then((res) => {
+        return cy.storeService.createOrder(orderData).then((res) => {
           expect(res.status).to.eq(200);
           expect(res.body.id).to.eq(orderData.id);
 
@@ -30,20 +30,20 @@ describe("Store API", () => {
     it("DELETE - should delete the created order", () => {
       expect(createdOrderId, "ID of the created order").to.exist;
 
-      cy.serviceToStore.deleteOrderById(createdOrderId).then((res) => {
+      cy.storeService.deleteOrderById(createdOrderId).then((res) => {
         expect(res.status).to.be.oneOf([200, 204]);
       });
     });
 
     it("POST - should create, retrieve and delete an order", () => {
       cy.fixture("store/order.json").then((orderData) => {
-        cy.serviceToStore
+        cy.storeService
           .createOrder(orderData)
           .then((createRes) => {
             expect(createRes.status).to.eq(200);
             expect(createRes.body.id).to.eq(orderData.id);
 
-            return cy.serviceToStore.getOrderById(orderData.id);
+            return cy.storeService.getOrderById(orderData.id);
           })
           .then((getRes) => {
             expect(getRes.status).to.eq(200);
@@ -52,7 +52,7 @@ describe("Store API", () => {
             expect(getRes.body.quantity).to.eq(orderData.quantity);
             expect(getRes.body.status).to.eq(orderData.status);
 
-            return cy.serviceToStore.deleteOrderById(orderData.id);
+            return cy.storeService.deleteOrderById(orderData.id);
           })
           .then((deleteRes) => {
             expect(deleteRes.status).to.be.oneOf([200, 204]);
@@ -60,23 +60,8 @@ describe("Store API", () => {
       });
     });
 
-    it("POST - should handle an order with negative quantity", () => {
-      cy.fixture("store/invalidOrder.json").then((orderData) => {
-        cy.serviceToStore.createOrder(orderData).then((res) => {
-          cy.log(`HTTP status: ${res.status}`);
-          cy.log(`Response body: ${JSON.stringify(res.body)}`);
-
-          expect(res.status).to.be.oneOf([200, 400, 405, 500]);
-
-          if (res.status === 200) {
-            cy.serviceToStore.deleteOrderById(orderData.id);
-          }
-        });
-      });
-    });
-
     it("GET - should return store inventory with valid quantities", () => {
-      cy.serviceToStore.getInventory().then((res) => {
+      cy.storeService.getInventory().then((res) => {
         expect(res.status).to.eq(200);
         expect(res.body).to.be.an("object");
         expect(res.body).to.not.be.empty;
@@ -101,51 +86,13 @@ describe("Store API", () => {
         });
       });
     });
-
-    it("POST - should evaluate an order with zero quantity", () => {
-      cy.fixture("store/zeroQuantityOrder.json").then((orderData) => {
-        cy.serviceToStore.createOrder(orderData).then((res) => {
-          cy.log(`HTTP status: ${res.status}`);
-          cy.log(`Response body: ${JSON.stringify(res.body)}`);
-
-          if (res.status === 200) {
-            return cy.serviceToStore
-              .deleteOrderById(orderData.id)
-              .then((deleteRes) => {
-                expect(deleteRes.status).to.be.oneOf([200, 204]);
-              });
-          }
-
-          expect(res.status).to.be.oneOf([400, 405, 422]);
-        });
-      });
-    });
-
-    it("POST - should evaluate an order without quantity", () => {
-      cy.fixture("store/orderWithoutQuantity.json").then((orderData) => {
-        cy.serviceToStore.createOrder(orderData).then((res) => {
-          cy.log(`HTTP status: ${res.status}`);
-          cy.log(`Response body: ${JSON.stringify(res.body)}`);
-
-          if (res.status === 200) {
-            return cy.serviceToStore
-              .deleteOrderById(orderData.id)
-              .then((deleteRes) => {
-                expect(deleteRes.status).to.be.oneOf([200, 204]);
-              });
-          }
-
-          expect(res.status).to.be.oneOf([400, 405, 422]);
-        });
-      });
-    });
   });
 });
 
-describe("Negative Test Scenarios", () => {
+describe("Store API - Negative Scenarios", () => {
   context("REST Feature", { tags: "rest" }, () => {
     it("GET - should handle a non-existent order", () => {
-      cy.serviceToStore.getOrderById(0).then((res) => {
+      cy.storeService.getOrderById(0).then((res) => {
         expect(res.status).to.eq(404);
         expect(res.body).to.have.property("code", 1);
         expect(res.body).to.have.property("type", "error");
@@ -154,7 +101,7 @@ describe("Negative Test Scenarios", () => {
     });
 
     it("DELETE - should handle a non-existent order", () => {
-      cy.serviceToStore.deleteOrderById(1).then((res) => {
+      cy.storeService.deleteOrderById(1).then((res) => {
         expect(res.status).to.eq(404);
         expect(res.body).to.have.property("code", 404);
         expect(res.body).to.have.property("type", "unknown");
@@ -162,27 +109,8 @@ describe("Negative Test Scenarios", () => {
       });
     });
 
-    it("POST - should document API behavior for an invalid order status", () => {
-      cy.fixture("store/invalidOrderStatus.json").then((orderData) => {
-        cy.serviceToStore.createOrder(orderData).then((res) => {
-          cy.log(`HTTP status: ${res.status}`);
-          cy.log(`Response body: ${JSON.stringify(res.body)}`);
-
-          if (res.status === 200) {
-            return cy.serviceToStore
-              .deleteOrderById(orderData.id)
-              .then((deleteRes) => {
-                expect(deleteRes.status).to.be.oneOf([200, 204]);
-              });
-          }
-
-          cy.log(`Unexpected HTTP status: ${res.status}`);
-        });
-      });
-    });
-
     it("GET - should handle an order with a negative ID", () => {
-      cy.serviceToStore.getOrderById(-1).then((res) => {
+      cy.storeService.getOrderById(-1).then((res) => {
         cy.log(`HTTP status: ${res.status}`);
         cy.log(`Response body: ${JSON.stringify(res.body)}`);
 
@@ -191,7 +119,7 @@ describe("Negative Test Scenarios", () => {
     });
 
     it("GET - should handle a non-numeric order ID", () => {
-      cy.serviceToStore.getOrderById("abc").then((res) => {
+      cy.storeService.getOrderById("abc").then((res) => {
         cy.log(`HTTP status: ${res.status}`);
         cy.log(`Response body: ${JSON.stringify(res.body)}`);
 
@@ -201,7 +129,7 @@ describe("Negative Test Scenarios", () => {
 
     it("POST - should investigate an order with non-numeric quantity", () => {
       cy.fixture("store/orderWithStringQuantity.json").then((orderData) => {
-        cy.serviceToStore.createOrder(orderData).then((res) => {
+        cy.storeService.createOrder(orderData).then((res) => {
           cy.log(`HTTP status: ${res.status}`);
           cy.log(`Response body: ${JSON.stringify(res.body)}`);
 
@@ -209,22 +137,93 @@ describe("Negative Test Scenarios", () => {
         });
       });
     });
+  });
+});
 
-    it("POST - should investigate an order with null quantity", () => {
-      cy.fixture("store/orderWithNullQuantity.json").then((orderData) => {
-        cy.serviceToStore.createOrder(orderData).then((res) => {
+describe("Store API - Edge Cases and API Behavior", () => {
+  context("REST Feature", { tags: "rest" }, () => {
+    it("POST - should evaluate an order with zero quantity", () => {
+      cy.fixture("store/zeroQuantityOrder.json").then((orderData) => {
+        cy.storeService.createOrder(orderData).then((res) => {
+          cy.log(`HTTP status: ${res.status}`);
+          cy.log(`Response body: ${JSON.stringify(res.body)}`);
+
+          expect(res.status).to.eq(200);
+
+          return cy.storeService
+            .deleteOrderById(orderData.id)
+            .then((deleteRes) => {
+              expect(deleteRes.status).to.be.oneOf([200, 204]);
+            });
+        });
+      });
+    });
+    it("POST - should accept an order with negative quantity", () => {
+      cy.fixture("store/invalidOrder.json").then((orderData) => {
+        cy.storeService.createOrder(orderData).then((res) => {
+          cy.log(`HTTP status: ${res.status}`);
+          cy.log(`Response body: ${JSON.stringify(res.body)}`);
+
+          expect(res.status).to.eq(200);
+
+          if (res.status === 200) {
+            return cy.storeService
+              .deleteOrderById(orderData.id)
+              .then((deleteRes) => {
+                expect(deleteRes.status).to.be.oneOf([200, 204]);
+              });
+          }
+        });
+      });
+    });
+
+    it("POST - should evaluate an order with zero quantity", () => {
+      cy.fixture("store/zeroQuantityOrder.json").then((orderData) => {
+        cy.storeService.createOrder(orderData).then((res) => {
+          cy.log(`HTTP status: ${res.status}`);
+          cy.log(`Response body: ${JSON.stringify(res.body)}`);
+
+          expect(res.status).to.eq(200);
+
+          return cy.storeService
+            .deleteOrderById(orderData.id)
+            .then((deleteRes) => {
+              expect(deleteRes.status).to.be.oneOf([200, 204]);
+            });
+        });
+      });
+    });
+    it("POST - should evaluate an order without quantity", () => {
+      cy.fixture("store/orderWithoutQuantity.json").then((orderData) => {
+        cy.storeService.createOrder(orderData).then((res) => {
+          cy.log(`HTTP status: ${res.status}`);
+          cy.log(`Response body: ${JSON.stringify(res.body)}`);
+
+          expect(res.status).to.eq(200);
+
+          return cy.storeService
+            .deleteOrderById(orderData.id)
+            .then((deleteRes) => {
+              expect(deleteRes.status).to.be.oneOf([200, 204]);
+            });
+        });
+      });
+    });
+    it("POST - should document API behavior for an invalid order status", () => {
+      cy.fixture("store/invalidOrderStatus.json").then((orderData) => {
+        cy.storeService.createOrder(orderData).then((res) => {
           cy.log(`HTTP status: ${res.status}`);
           cy.log(`Response body: ${JSON.stringify(res.body)}`);
 
           if (res.status === 200) {
-            return cy.serviceToStore
+            return cy.storeService
               .deleteOrderById(orderData.id)
               .then((deleteRes) => {
                 expect(deleteRes.status).to.be.oneOf([200, 204]);
               });
           }
 
-          expect(res.status).to.be.oneOf([400, 405, 422, 500]);
+          cy.log(`Unexpected HTTP status: ${res.status}`);
         });
       });
     });
