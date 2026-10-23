@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 jobs:
-  test-api-qa-petstore-pet:
+  test-api-qa-petstore:
     runs-on: ubuntu-latest
 
     steps:
@@ -27,14 +27,24 @@ jobs:
         run: |
           echo "Current Date and Time (Brazil): $(TZ=America/Sao_Paulo date '+%d/%m/%Y %H:%M:%S')"
 
-        # ------------------------------------------------------------------------------
-        # System Test Jobs - QA (Petstore API)
-        # ------------------------------------------------------------------------------
+      # ------------------------------------------------------------------------------
+      # System Test Jobs - QA (Petstore API)
+      # ------------------------------------------------------------------------------
 
-      - name: Run Cypress API tests
+      - name: Run Cypress API tests - Pet
         working-directory: api
         run: |
           npm run test-qa -- --spec "cypress/e2e/pet/createPet.cy.js"
+      
+      - name: Run Cypress API tests - Store
+        working-directory: api
+        run: |
+          npm run test-qa -- --spec "cypress/e2e/store/store.cy.js"
+
+      - name: Run Cypress API tests - User
+        working-directory: api
+        run: |
+          npm run test-qa -- --spec "cypress/e2e/user/user.cy.js"
 
       # -------- REPORTS --------
 
