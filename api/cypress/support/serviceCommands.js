@@ -298,6 +298,8 @@ Cypress.Commands.add("apiKeyBinaryRequest", (method, url) => {
   });
 });
 
+// Uploads a pet image using an API key token and optional additional metadata.
+// Resolves the fixture file path and delegates the upload to a Cypress task.
 Cypress.Commands.add(
   "apiKeyUploadPetImage",
   (petId, filePath, additionalMetadata = "") => {
@@ -315,6 +317,8 @@ Cypress.Commands.add(
   },
 );
 
+// Sends a POST request with URL-encoded form data and API key authentication.
+// Disables automatic failure on HTTP error status codes for explicit response validation.
 Cypress.Commands.add("apiKeyFormUrlEncodedRequest", (url, formData) => {
   return cy.setupApiKeyToken().then((apiKeyToken) => {
     return cy.request({

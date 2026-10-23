@@ -50,37 +50,37 @@ describe("User API", () => {
 
     it("PUT - should update the user successfully", () => {
       cy.fixture("user/user.json").then((userData) => {
-        const updatedUser = {
-          ...userData,
-          firstName: "UpdatedCypress",
-          lastName: "UpdatedTest",
-          email: "updated.cypress.user.7001@example.com",
-          phone: "11912345678",
-          userStatus: 2,
-        };
+        cy.fixture("user/updatedUser.json").then((updatedUserData) => {
+          const updatedUser = {
+            ...userData,
+            ...updatedUserData,
+          };
 
-        cy.validateDetailsResponse(
-          () => cy.serviceToUser.updateUser(userData.username, updatedUser),
-          200,
-          "OK",
-          true,
-        ).then((res) => {
-          const responseBody = res.body;
+          cy.validateDetailsResponse(
+            () => cy.serviceToUser.updateUser(userData.username, updatedUser),
+            200,
+            "OK",
+            true,
+          ).then((res) => {
+            const responseBody = res.body;
 
-          expect(responseBody).to.be.an("object");
-          expect(responseBody).to.have.property("code", 200);
-          expect(responseBody).to.have.property("type");
-          expect(responseBody.message).to.eq(String(userData.id));
-        });
+            expect(responseBody).to.be.an("object");
+            expect(responseBody).to.have.property("code", 200);
+            expect(responseBody).to.have.property("type");
+            expect(responseBody.message).to.eq(String(userData.id));
+          });
 
-        cy.serviceToUser.getUserByUsername(userData.username).then((getRes) => {
-          expect(getRes.status).to.eq(200);
-          expect(getRes.body.username).to.eq(userData.username);
-          expect(getRes.body.firstName).to.eq(updatedUser.firstName);
-          expect(getRes.body.lastName).to.eq(updatedUser.lastName);
-          expect(getRes.body.email).to.eq(updatedUser.email);
-          expect(getRes.body.phone).to.eq(updatedUser.phone);
-          expect(getRes.body.userStatus).to.eq(updatedUser.userStatus);
+          cy.serviceToUser
+            .getUserByUsername(userData.username)
+            .then((getRes) => {
+              expect(getRes.status).to.eq(200);
+              expect(getRes.body.username).to.eq(userData.username);
+              expect(getRes.body.firstName).to.eq(updatedUser.firstName);
+              expect(getRes.body.lastName).to.eq(updatedUser.lastName);
+              expect(getRes.body.email).to.eq(updatedUser.email);
+              expect(getRes.body.phone).to.eq(updatedUser.phone);
+              expect(getRes.body.userStatus).to.eq(updatedUser.userStatus);
+            });
         });
       });
     });
