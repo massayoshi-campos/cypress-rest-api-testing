@@ -39,12 +39,12 @@ jobs:
       - name: Run Cypress API tests - Store
         working-directory: api
         run: |
-          npm run test-qa -- --spec "cypress/e2e/store/store.cy.js"
+          npm run test-qa -- --spec "cypress/e2e/store/createOrder.cy.js"
 
       - name: Run Cypress API tests - User
         working-directory: api
         run: |
-          npm run test-qa -- --spec "cypress/e2e/user/user.cy.js"
+          npm run test-qa -- --spec "cypress/e2e/user/createUser.cy.js"
 
       # -------- REPORTS --------
 
